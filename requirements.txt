@@ -1,0 +1,6 @@
+google-api-python-client
+uritemplate
+httplib2
+apiclient
+oauth2client
+
