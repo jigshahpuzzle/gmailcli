@@ -19,7 +19,10 @@ SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Gmail API Python Quickstart'
 
-
+'''
+Run this script to generate your credentials, and store them
+for later use. 
+'''
 def get_credentials():
     """Gets valid user credentials from storage.
 
