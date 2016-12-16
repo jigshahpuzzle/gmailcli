@@ -16,7 +16,7 @@ def prompt():
 Matches passed in user input into a command
 '''
 def extractCommand(userinp):
-	commandList = ['', '', '', '', ''] 
+	commandList = ['register', 'inbox', 'sent', 'create'] 
 
 
 '''
