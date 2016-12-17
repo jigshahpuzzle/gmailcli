@@ -12,6 +12,7 @@ class CLI(object):
 		self.fmap = {
 			'exit' : self.exit,
 			'register' : self.register,
+			'help' : self.help,
 		}
 
 	
@@ -32,7 +33,7 @@ class CLI(object):
 	Matches passed in user input with the function pointer to a command
 	'''
 	def extractCommand(self, userinp):
-		commandList = ['exit', 'register', 'inbox', 'sent', 'create'] 
+		commandList = ['exit', 'register', 'inbox', 'sent', 'create', 'help'] 
 		for cmd in commandList: 
 			if cmd in userinp: 
 				return self.fmap[cmd]
@@ -49,6 +50,11 @@ class CLI(object):
 	'''
 	def register(self): 
 		get_credentials()
+
+	def help(self): 
+		print "List of Commands:"
+		print "1. exit (quit the CLI)"
+		print "2. register (register a new gmail account with the system)"
 
 if __name__ == "__main__":
 	cli = CLI()
