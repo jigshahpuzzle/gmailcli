@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
-from src.prompt import prompt
+from src.prompt import CLI
 
-prompt()
+cli = CLI()
+cli.prompt()
+
 
 
