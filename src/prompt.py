@@ -10,7 +10,7 @@ class CLI(object):
 	def __init__(self): 
 		self.loop = True
 		self.fmap = {
-			'exit' : self.exit, 
+			'exit' : self.exit,
 		}
 
 	
@@ -44,4 +44,7 @@ class CLI(object):
 		 self.loop = False
 		
 
+if __name__ == "__main__":
+	cli = CLI()
+	cli.prompt()
 	
