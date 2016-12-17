@@ -4,3 +4,4 @@ src/*.pyc
 src/*.DS_Store
 gcli/
 *.swp
+credentials/*.json

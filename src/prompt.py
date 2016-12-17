@@ -11,6 +11,7 @@ class CLI(object):
 		self.loop = True
 		self.fmap = {
 			'exit' : self.exit,
+			'register' : self.register,
 		}
 
 	
@@ -43,6 +44,11 @@ class CLI(object):
 	def exit(self): 
 		 self.loop = False
 		
+	'''
+	Authorizes and saves a new gmail account for the user
+	'''
+	def register(self): 
+		get_credentials()
 
 if __name__ == "__main__":
 	cli = CLI()
