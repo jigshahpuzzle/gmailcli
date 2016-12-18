@@ -49,5 +49,9 @@ def get_credentials(email_id):
         else: # Needed only for compatibility with Python 2.6
             credentials = tools.run(flow, store)
         print('Storing credentials to ' + credential_path)
+        f = open("credentials/registration.txt", "a")
+        f.write(email_id + "\n")
+        f.close()
+		
     return credentials
 
