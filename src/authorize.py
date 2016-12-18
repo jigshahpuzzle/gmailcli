@@ -23,7 +23,7 @@ APPLICATION_NAME = 'Gmail API Python Quickstart'
 Run this script to generate your credentials, and store them
 for later use. 
 '''
-def get_credentials():
+def get_credentials(email_id):
     """Gets valid user credentials from storage.
 
     If nothing has been stored, or if the stored credentials are invalid,
@@ -37,7 +37,7 @@ def get_credentials():
     if not os.path.exists(credential_dir):
         os.makedirs(credential_dir)
     credential_path = os.path.join(credential_dir,
-                                   'user_credentials.json')
+                                   email_id + '.json')
 
     store = Storage(credential_path)
     credentials = store.get()

@@ -26,7 +26,7 @@ class CLI(object):
 			userinp = raw_input("-- > ")
 			f = self.extractCommand(userinp)
 			if f:
-				f()
+				f(userinp)
 
 
 	'''
@@ -42,19 +42,20 @@ class CLI(object):
 	'''
 	Exits the CLI
 	'''
-	def exit(self): 
+	def exit(self, userinp): 
 		 self.loop = False
 		
 	'''
 	Authorizes and saves a new gmail account for the user
 	'''
-	def register(self): 
-		get_credentials()
+	def register(self, userinp): 
+		userinp = userinp.split('register ')[1]
+		get_credentials(userinp)
 
-	def help(self): 
+	def help(self, userinp): 
 		print "List of Commands:"
 		print "1. exit (quit the CLI)"
-		print "2. register (register a new gmail account with the system)"
+		print "2. register <gmail address> (register a new gmail account with the system)"
 
 if __name__ == "__main__":
 	cli = CLI()
