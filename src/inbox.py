@@ -1,5 +1,5 @@
 from googleapiclient import errors
-from dashtable import data2md
+from prettytable import PrettyTable
 
 '''
 Given a service (and potentially a query), returns the top 10
@@ -37,10 +37,33 @@ the next page.
 '''
 def PrintThreads(service, user_id, ptoken):
 	threads = ListThreadsMatchingQuery(service, user_id, ptoken)
-	view = [['Sender', 'Subject']]
+	view = PrettyTable(['#', 'Sender', 'Subject'])
+	view.align = "l"
+	tnum = 0 
 	for thread in threads:
 		t = GetThread(service, user_id, thread['id'])
+		labels = t['messages'][0]['labelIds']
 		subject = filter(lambda x : x['name'] == 'Subject',t['messages'][0]['payload']['headers'])[0]['value']
-		sender = filter(lambda x : x['name'] == 'From' ,t['messages'][0]['payload']['headers'])[0]['value']
-		view.append([sender, subject])
-	print data2md(view) 	
+		sender = filter(lambda x : x['name'] == 'From' ,t['messages'][0]['payload']['headers'])[0]['value'].split('<')[0]
+		if 'UNREAD' in labels:
+			sender = color.PURPLE + sender + color.END
+			subject = color.PURPLE + subject + color.END
+		view.add_row([tnum, sender, subject])
+		tnum += 1
+	print view
+
+'''
+Helper class to assist with assigning colors while printing
+'''
+class color:
+   PURPLE = '\033[95m'
+   CYAN = '\033[96m'
+   DARKCYAN = '\033[36m'
+   BLUE = '\033[94m'
+   GREEN = '\033[92m'
+   YELLOW = '\033[93m'
+   RED = '\033[91m'
+   BOLD = '\033[1m'
+   UNDERLINE = '\033[4m'
+   END = '\033[0m'
+	
