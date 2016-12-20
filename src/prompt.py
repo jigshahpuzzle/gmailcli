@@ -1,5 +1,7 @@
 from authorize import get_credentials, load_credentials
-
+from inbox import PrintThreads
+import httplib2
+from googleapiclient import discovery
 
 '''
 Executable script run in main method
@@ -17,11 +19,26 @@ class CLI(object):
 
 	def __init__(self): 
 		self.loop = True
+		f = open("credentials/registration.txt")
+		data = f.read()
+		f.close()
+		email = data.split("\n")[0]
+		if email:
+			self.email = email
+			self.credentials = load_credentials(email)
+			http = self.credentials.authorize(httplib2.Http())
+			self.service = discovery.build('gmail', 'v1', http=http)
+		else: 
+			self.email = None
+			self.credentials = None
+			self.service = None
+		self.ptoken = None
 		self.fmap = {
 			'exit' : self.exit,
 			'register' : self.register,
 			'help' : self.help,
-			'use' : self.use,              
+			'use' : self.use,    
+			'inbox' : self.inbox,          
 		}
 
 	
@@ -30,7 +47,7 @@ class CLI(object):
 	'''
 	def prompt(self): 
 		print "Welcome to GMail on terminal"
-		print "Type 'mm' to view a list of commands"
+		print "Type 'help' to view a list of commands"
 		while self.loop: 
 			userinp = raw_input("-- > ")
 			f = self.extractCommand(userinp)
@@ -59,14 +76,24 @@ class CLI(object):
 	'''
 	def register(self, userinp): 
 		userinp = userinp.split('register ')[1]
+		self.email = userinp
 		self.credentials = get_credentials(userinp)
+		http = self.credentials.authorize(httplib2.Http())
+		self.service = discovery.build('gmail', 'v1', http=http)
 
-	
+	'''
+	Loads a user's credentials into the global state
+	'''
 	def use(self, userinp):
 		userinp = userinp.split('use ')[1]
+		self.email = userinp
 		self.credentials = load_credentials(userinp)
+		http = self.credentials.authorize(httplib2.Http())
+		self.service = discovery.build('gmail', 'v1', http=http)
 		print "Using account %s" % userinp
 
+	def inbox(self, userinp): 
+		PrintThreads(self.service, 'me', self.ptoken)
 	'''
 	Prints out a help menu for the user
 	'''
@@ -74,7 +101,8 @@ class CLI(object):
 		print "List of Commands:"
 		print "1. exit (quit the CLI)"
 		print "2. register <gmail address> (register a new gmail account with the system)"
-		print "3. use <gmail address> (load information for a registered email address)"
+		print "3. use <gmail address> (load authentication for a registered email address)"
+		print "4. inbox (load first 10 email threads)"
 
 if __name__ == "__main__":
 	executable()
