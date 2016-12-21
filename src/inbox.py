@@ -2,7 +2,7 @@ from googleapiclient import errors
 from prettytable import PrettyTable
 
 '''
-Given a service (and potentially a query), returns the top 10
+Given a service (and potentially a query), returns the next 10
 threads in the user's account.
 '''
 def ListThreadsMatchingQuery(service, user_id, ptoken, query=''):
@@ -12,10 +12,7 @@ def ListThreadsMatchingQuery(service, user_id, ptoken, query=''):
         response = service.users().threads().list(userId=user_id, q=query, maxResults=10, pageToken=ptoken).execute()
     else:
         response = service.users().threads().list(userId=user_id, q=query, maxResults=10).execute()
-    threads = []
-    if 'threads' in response:
-      threads.extend(response['threads'])
-    return threads
+    return response
   except errors.HttpError, error:
     print 'An error occurred: %s' % error
 
@@ -35,12 +32,11 @@ def GetThread(service, user_id, thread_id):
 Print the top 10 threads for a user, and return the token necessary to get to 
 the next page.
 '''
-def PrintThreads(service, user_id, ptoken):
+def PrintThreads(service, user_id, ptoken, tnum):
 	threads = ListThreadsMatchingQuery(service, user_id, ptoken)
 	view = PrettyTable(['#', 'Sender', 'Subject'])
 	view.align = "l"
-	tnum = 0 
-	for thread in threads:
+	for thread in threads['threads']:
 		t = GetThread(service, user_id, thread['id'])
 		labels = t['messages'][0]['labelIds']
 		subject = filter(lambda x : x['name'] == 'Subject',t['messages'][0]['payload']['headers'])[0]['value']
@@ -51,6 +47,8 @@ def PrintThreads(service, user_id, ptoken):
 		view.add_row([tnum, sender, subject])
 		tnum += 1
 	print view
+	return threads['nextPageToken']
+	
 
 '''
 Helper class to assist with assigning colors while printing

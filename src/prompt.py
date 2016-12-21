@@ -32,7 +32,8 @@ class CLI(object):
 			self.email = None
 			self.credentials = None
 			self.service = None
-		self.ptoken = None
+		self.ptokens = [None]
+		self.tnum = 0
 		self.fmap = {
 			'exit' : self.exit,
 			'register' : self.register,
@@ -92,8 +93,17 @@ class CLI(object):
 		self.service = discovery.build('gmail', 'v1', http=http)
 		print "Using account %s" % userinp
 
-	def inbox(self, userinp): 
-		PrintThreads(self.service, 'me', self.ptoken)
+	def inbox(self, userinp):
+		params = userinp.split('inbox ')
+		if len(params) > 1: 
+			if params[1] == 'n':
+				self.tnum += 10	
+			if params[1] == 'p': 
+				self.tnum -= 10
+		index = (self.tnum  + 1) / 10
+		ptoken = PrintThreads(self.service, 'me', self.ptokens[index], self.tnum)
+		self.ptokens.append(ptoken)
+
 	'''
 	Prints out a help menu for the user
 	'''
