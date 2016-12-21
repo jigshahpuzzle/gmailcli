@@ -1,5 +1,5 @@
 from authorize import GmailAuth
-from inbox import PrintThreads
+from inbox import Inbox
 
 '''
 Executable script run in main method
@@ -20,9 +20,7 @@ class CLI(object):
 		data = f.read()
 		f.close()
 		email = data.split("\n")[0]
-		self.gauth = GmailAuth(email)
-		self.ptokens = [None]
-		self.tnum = 0
+		self.user = UserData(email)
 		self.fmap = {
 			'exit' : self.exit,
 			'register' : self.register,
@@ -30,7 +28,6 @@ class CLI(object):
 			'use' : self.use,    
 			'inbox' : self.inbox,          
 		}
-
 	
 	'''
 	Script that generates a CLI to work with gmail
@@ -66,26 +63,24 @@ class CLI(object):
 	'''
 	def register(self, userinp): 
 		email = userinp.split('register ')[1]
-		self.gauth.reset(email, True)
+		self.user.reset(email, True)
 
 	'''
 	Loads a user's credentials into the global state
 	'''
 	def use(self, userinp):
 		email = userinp.split('use ')[1]
-		self.gauth.reset(email)	
+		self.user.reset(email)	
 		print "Using account %s" % email
 
 	def inbox(self, userinp):
 		params = userinp.split('inbox ')
 		if len(params) > 1: 
 			if params[1] == 'n':
-				self.tnum += 10	
+				self.user.inbox.nextPage()	
 			if params[1] == 'p': 
-				self.tnum -= 10
-		index = (self.tnum  + 1) / 10
-		ptoken = PrintThreads(self.gauth.service, 'me', self.ptokens[index], self.tnum)
-		self.ptokens.append(ptoken)
+				self.user.inbox.prevPage()
+		self.user.inbox.PrintThreads(self.user.gauth.service) 
 
 	'''
 	Prints out a help menu for the user
@@ -95,9 +90,33 @@ class CLI(object):
 		print "1. exit (quit the CLI)"
 		print "2. register <gmail address> (register a new gmail account with the system)"
 		print "3. use <gmail address> (load authentication for a registered email address)"
-		print "4. inbox (load a view with 10 email threads starting from last indexed point)"
-		print "5. inbox n (advance indexed point by 10 threads, and then show view)"
-		print "6. inbox p (retreat indexed point by 10 threads, and then show view)"
+		print "4. inbox (load a view with N email threads starting from last indexed point)"
+		print "5. inbox n (advance indexed point by N threads, and then show view)"
+		print "6. inbox p (retreat indexed point by N threads, and then show view)"
+
+
+
+'''
+Stores the current email account's data and has helper 
+functions to modify this data. 
+'''
+class UserData(object):
+
+	'''
+	Initialize basic user data to base condition
+	'''
+	def __init__(self, email): 
+		self.email = email
+		self.gauth = GmailAuth(email)
+		self.inbox = Inbox()	
+
+	'''
+	Initialize a user with passed in email, overwriting previous user
+	'''
+	def reset(self, email, register=False):
+		self.email = email	
+		self.gauth.reset(email, register)
+		self.inbox.reset()
 
 if __name__ == "__main__":
 	executable()

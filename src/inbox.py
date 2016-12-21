@@ -1,53 +1,88 @@
 from googleapiclient import errors
 from prettytable import PrettyTable
 
-'''
-Given a service (and potentially a query), returns the next 10
-threads in the user's account.
-'''
-def ListThreadsMatchingQuery(service, user_id, ptoken, query=''):
-
-  try:
-    if ptoken:
-        response = service.users().threads().list(userId=user_id, q=query, maxResults=10, pageToken=ptoken).execute()
-    else:
-        response = service.users().threads().list(userId=user_id, q=query, maxResults=10).execute()
-    return response
-  except errors.HttpError, error:
-    print 'An error occurred: %s' % error
+MAX_RESULTS = 10
 
 '''
-Reterive the data found in a thread
+Created by prompt to manage the view created by 
+the inbox command.
 '''
-def GetThread(service, user_id, thread_id):
+class Inbox(object): 
 
-  try:
-    thread = service.users().threads().get(userId=user_id, id=thread_id).execute()
-    return thread
-  except errors.HttpError, error:
-    print 'An error occurred: %s' % error
+	'''
+	Same as reset
+	'''
+	def __init__(self): 
+		self.reset()
+
+	'''
+	Set all variables to their base (initial) condition
+	'''
+	def reset(self): 
+		self.ptokens = [None]
+		self.tnum = 0
+
+	'''
+	Given a service (and potentially a query), returns the next 10
+	threads in the user's account.
+	'''
+	def ListThreadsMatchingQuery(self, service, user_id='me'):
+		index = self.tnum / MAX_RESULTS
+		ptoken = self.ptokens[index]
+		try:
+			if ptoken:
+				response = service.users().threads().list(userId=user_id, maxResults=MAX_RESULTS, pageToken=ptoken).execute()
+			else:
+				response = service.users().threads().list(userId=user_id, maxResults=MAX_RESULTS).execute()
+			return response
+		except errors.HttpError, error:
+			print 'An error occurred: %s' % error
+
+	'''
+	Reterive the data found in a thread
+	'''
+	def GetThread(self, service, user_id, thread_id):
+		try:
+			thread = service.users().threads().get(userId=user_id, id=thread_id).execute()
+			return thread
+		except errors.HttpError, error:
+			print 'An error occurred: %s' % error
 
 
-'''
-Print the top 10 threads for a user, and return the token necessary to get to 
-the next page.
-'''
-def PrintThreads(service, user_id, ptoken, tnum):
-	threads = ListThreadsMatchingQuery(service, user_id, ptoken)
-	view = PrettyTable(['#', 'Sender', 'Subject'])
-	view.align = "l"
-	for thread in threads['threads']:
-		t = GetThread(service, user_id, thread['id'])
-		labels = t['messages'][0]['labelIds']
-		subject = filter(lambda x : x['name'] == 'Subject',t['messages'][0]['payload']['headers'])[0]['value']
-		sender = filter(lambda x : x['name'] == 'From' ,t['messages'][0]['payload']['headers'])[0]['value'].split('<')[0]
-		if 'UNREAD' in labels:
-			sender = color.PURPLE + sender + color.END
-			subject = color.PURPLE + subject + color.END
-		view.add_row([tnum, sender, subject])
-		tnum += 1
-	print view
-	return threads['nextPageToken']
+	'''
+	Print the top n threads for a user, and return the token necessary to get to 
+	the next page.
+	'''
+	def PrintThreads(self, service, user_id='me'):
+		threads = self.ListThreadsMatchingQuery(service, user_id)
+		view = PrettyTable(['#', 'Sender', 'Subject'])
+		view.align = "l"
+		tnum = self.tnum
+		for thread in threads['threads']:
+			t = self.GetThread(service, user_id, thread['id'])
+			labels = t['messages'][0]['labelIds']
+			filtered = filter(lambda x : x['name'] == 'Subject' or x['name'] == 'From',t['messages'][0]['payload']['headers'])
+			subject = filter(lambda x : x['name'] == 'Subject', filtered)[0]['value']
+			sender = filter(lambda x : x['name'] == 'From', filtered)[0]['value']
+			if 'UNREAD' in labels:
+				sender = color.PURPLE + sender + color.END
+				subject = color.PURPLE + subject + color.END
+			view.add_row([tnum, sender, subject])
+			tnum += 1
+		print view
+		self.ptokens.append(threads['nextPageToken'])
+
+	'''
+	Advances inbox to the next set of results
+	'''
+	def nextPage(self):
+		self.tnum += MAX_RESULTS
+
+	'''
+	Retreats inbox to the previous set of results
+	'''
+	def prevPage(self): 
+		self.tnum -= MAX_RESULTS
 	
 
 '''
