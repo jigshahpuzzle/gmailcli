@@ -1,7 +1,5 @@
-from authorize import get_credentials, load_credentials
+from authorize import GmailAuth
 from inbox import PrintThreads
-import httplib2
-from googleapiclient import discovery
 
 '''
 Executable script run in main method
@@ -16,22 +14,13 @@ Wrapper to store common CLI functions
 '''
 class CLI(object):
 
-
 	def __init__(self): 
 		self.loop = True
 		f = open("credentials/registration.txt")
 		data = f.read()
 		f.close()
 		email = data.split("\n")[0]
-		if email:
-			self.email = email
-			self.credentials = load_credentials(email)
-			http = self.credentials.authorize(httplib2.Http())
-			self.service = discovery.build('gmail', 'v1', http=http)
-		else: 
-			self.email = None
-			self.credentials = None
-			self.service = None
+		self.gauth = GmailAuth(email)
 		self.ptokens = [None]
 		self.tnum = 0
 		self.fmap = {
@@ -76,22 +65,16 @@ class CLI(object):
 	Authorizes and saves a new gmail account for the user
 	'''
 	def register(self, userinp): 
-		userinp = userinp.split('register ')[1]
-		self.email = userinp
-		self.credentials = get_credentials(userinp)
-		http = self.credentials.authorize(httplib2.Http())
-		self.service = discovery.build('gmail', 'v1', http=http)
+		email = userinp.split('register ')[1]
+		self.gauth.reset(email, True)
 
 	'''
 	Loads a user's credentials into the global state
 	'''
 	def use(self, userinp):
-		userinp = userinp.split('use ')[1]
-		self.email = userinp
-		self.credentials = load_credentials(userinp)
-		http = self.credentials.authorize(httplib2.Http())
-		self.service = discovery.build('gmail', 'v1', http=http)
-		print "Using account %s" % userinp
+		email = userinp.split('use ')[1]
+		self.gauth.reset(email)	
+		print "Using account %s" % email
 
 	def inbox(self, userinp):
 		params = userinp.split('inbox ')
@@ -101,7 +84,7 @@ class CLI(object):
 			if params[1] == 'p': 
 				self.tnum -= 10
 		index = (self.tnum  + 1) / 10
-		ptoken = PrintThreads(self.service, 'me', self.ptokens[index], self.tnum)
+		ptoken = PrintThreads(self.gauth.service, 'me', self.ptokens[index], self.tnum)
 		self.ptokens.append(ptoken)
 
 	'''
@@ -112,7 +95,9 @@ class CLI(object):
 		print "1. exit (quit the CLI)"
 		print "2. register <gmail address> (register a new gmail account with the system)"
 		print "3. use <gmail address> (load authentication for a registered email address)"
-		print "4. inbox (load first 10 email threads)"
+		print "4. inbox (load a view with 10 email threads starting from last indexed point)"
+		print "5. inbox n (advance indexed point by 10 threads, and then show view)"
+		print "6. inbox p (retreat indexed point by 10 threads, and then show view)"
 
 if __name__ == "__main__":
 	executable()
